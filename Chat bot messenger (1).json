@@ -176,13 +176,13 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://graph.facebook.com/v23.0/838181999371612/messages/",
+        "url": "",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
               "name": "Authorization",
-              "value": "Bearer EAASOMNGeSjoBP4HfxB9tCFGbFMFj3CBSqJQebZBpLyQ3tC2iZCL6caZCmT0MEGzYAVzU9dRj2wFBfR7UHcwIbhI7kB39JGY51OHjaD6i1ZAFAJbmKNfgWZC0GQORgjquRV2bqTlRdx8bV7BaZBDMwruJB51gtwTxam5ZBYnbLt2ybxDu8M3j7cn6ZAV2kTc2Ac4rZCZAIZCk50iCcPrSRtBjGdPhDSfTaya2rqMXBWKZAiRMLiFIUxkkYcVgLS1trhwZD"
+              "value": "Bearer <token>"
             }
           ]
         },
@@ -206,7 +206,7 @@
         "toolDescription": "FAQ tool",
         "documentId": {
           "__rl": true,
-          "value": "18-LnA7y7iGZX7nRdBc_PUgjuycih0YExkHz5xLXbiew",
+          "value": "",
           "mode": "list",
           "cachedResultName": "Chat bot",
           "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18-LnA7y7iGZX7nRdBc_PUgjuycih0YExkHz5xLXbiew/edit?usp=drivesdk"
@@ -257,7 +257,7 @@
           "parameters": [
             {
               "name": "Authorization",
-              "value": "Bearer EAASOMNGeSjoBP4HfxB9tCFGbFMFj3CBSqJQebZBpLyQ3tC2iZCL6caZCmT0MEGzYAVzU9dRj2wFBfR7UHcwIbhI7kB39JGY51OHjaD6i1ZAFAJbmKNfgWZC0GQORgjquRV2bqTlRdx8bV7BaZBDMwruJB51gtwTxam5ZBYnbLt2ybxDu8M3j7cn6ZAV2kTc2Ac4rZCZAIZCk50iCcPrSRtBjGdPhDSfTaya2rqMXBWKZAiRMLiFIUxkkYcVgLS1trhwZD"
+              "value": "Bearer "
             }
           ]
         },
