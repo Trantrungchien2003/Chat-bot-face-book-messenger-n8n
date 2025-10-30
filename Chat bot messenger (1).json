@@ -1,0 +1,442 @@
+{
+  "name": "Chat bot messenger",
+  "nodes": [
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.query['hub.challenge'] }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -592,
+        -224
+      ],
+      "id": "aa7a298f-210a-42a3-844a-d478ac8e57b9",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.0-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -128,
+        -32
+      ],
+      "id": "095de013-c118-4bc0-b9b0-e3b7379735fe",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "B0Kry9Ky9OT4RC3A",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "multipleMethods": true,
+        "path": "c1bc0eef-0409-48ad-8cb6-787de1285e6d",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -784,
+        16
+      ],
+      "id": "8bec89cc-b0b0-4b88-815a-0b21a7d8e169",
+      "name": "Messenger",
+      "webhookId": "c1bc0eef-0409-48ad-8cb6-787de1285e6d",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json['nội dung tin nhắn'] }}",
+        "options": {
+          "systemMessage": "You are a professional sales representative.\nWhen the customer sends a message, use the Google Sheet tool (FAQ tool) to search for an answer.\nThe sheet contains columns: \"Câu hỏi\" and \"Trả lời\".\nFind the most relevant answer based on similarity to the user's question, and respond with the \"Trả lời\" content."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -64,
+        -224
+      ],
+      "id": "d35d8869-1763-4bd9-a3f7-3cb258f21736",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json['nội dung tin nhắn'] }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        32,
+        -32
+      ],
+      "id": "9b267ee9-ce70-4a31-a622-8ac299775a20",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "mheRz4YYYQnZ80eb",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "409beefe-733d-4474-986c-20e894c3222c",
+              "leftValue": "={{ $json.body.entry[0].messaging[0].message.text }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -528,
+        32
+      ],
+      "id": "760fbfe1-32c8-417e-927c-26eccec06805",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "24ebe2a7-6d20-4f5c-becc-9912aa506a1f",
+              "name": "id khách hàng",
+              "value": "={{ $json.body.entry[0].messaging[0].sender.id }}",
+              "type": "string"
+            },
+            {
+              "id": "46134d05-2e8d-4eaa-9320-78ed5f7ebeed",
+              "name": "id page",
+              "value": "={{ $json.body.entry[0].messaging[0].recipient.id }}",
+              "type": "string"
+            },
+            {
+              "id": "cbaa73ac-9a54-48b4-8d23-5835915b7c9c",
+              "name": "nội dung tin nhắn",
+              "value": "={{ $json.body.entry[0].messaging[0].message.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -304,
+        -224
+      ],
+      "id": "7ccf19f8-9f3d-4b0e-8115-8616bb069f37",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body ={\n  \"recipient\":{\n    \"id\":`${$('Edit Fields').first().json['id khách hàng']}`\n  },\n  \"message\":{\n    \"text\":`${$input.first().json.output}`\n  }\n}\n  return {\n  data: body\n  }"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        320,
+        -224
+      ],
+      "id": "ccdd62ec-0ef2-4c52-86bc-ec59e3c6f6ff",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v23.0/838181999371612/messages/",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer EAASOMNGeSjoBP4HfxB9tCFGbFMFj3CBSqJQebZBpLyQ3tC2iZCL6caZCmT0MEGzYAVzU9dRj2wFBfR7UHcwIbhI7kB39JGY51OHjaD6i1ZAFAJbmKNfgWZC0GQORgjquRV2bqTlRdx8bV7BaZBDMwruJB51gtwTxam5ZBYnbLt2ybxDu8M3j7cn6ZAV2kTc2Ac4rZCZAIZCk50iCcPrSRtBjGdPhDSfTaya2rqMXBWKZAiRMLiFIUxkkYcVgLS1trhwZD"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.data }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        528,
+        -224
+      ],
+      "id": "e4246af9-8756-4bdc-8bbc-e42680228b16",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "FAQ tool",
+        "documentId": {
+          "__rl": true,
+          "value": "18-LnA7y7iGZX7nRdBc_PUgjuycih0YExkHz5xLXbiew",
+          "mode": "list",
+          "cachedResultName": "Chat bot",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18-LnA7y7iGZX7nRdBc_PUgjuycih0YExkHz5xLXbiew/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "FAQ ",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18-LnA7y7iGZX7nRdBc_PUgjuycih0YExkHz5xLXbiew/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        192,
+        -32
+      ],
+      "id": "4ef3eb32-868b-4606-9ee9-cb5ed689bed2",
+      "name": "Get row(s) in sheet in Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "p5jeJQZvsZiXP7B2",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const body ={\n  \"recipient\":{\n    \"id\":`${$input.first().json.body.entry[0].messaging[0].sender.id}`\n  },\n  \"message\":{\n    \"text\":`${\"Chào bạn, bạn đang tìm kiếm sản phẩm gì, hay có vấn đề gì cần giải quyết ạ? Em có thể gợi ý một vài món phù hợp với nhu cầu của bạn đó ạ.\"}`\n  }\n}\n  return {\n  data: body\n  }"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -240,
+        176
+      ],
+      "id": "cab5ff05-117b-4da7-bc68-f8ede44a3901",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v23.0/838181999371612/messages/",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer EAASOMNGeSjoBP4HfxB9tCFGbFMFj3CBSqJQebZBpLyQ3tC2iZCL6caZCmT0MEGzYAVzU9dRj2wFBfR7UHcwIbhI7kB39JGY51OHjaD6i1ZAFAJbmKNfgWZC0GQORgjquRV2bqTlRdx8bV7BaZBDMwruJB51gtwTxam5ZBYnbLt2ybxDu8M3j7cn6ZAV2kTc2Ac4rZCZAIZCk50iCcPrSRtBjGdPhDSfTaya2rqMXBWKZAiRMLiFIUxkkYcVgLS1trhwZD"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.data }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -32,
+        176
+      ],
+      "id": "df5baf91-a901-430c-b1bf-996eadbb4a14",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "cityName": "Nha Trang",
+        "language": "vi"
+      },
+      "type": "n8n-nodes-base.openWeatherMapTool",
+      "typeVersion": 1,
+      "position": [
+        336,
+        -32
+      ],
+      "id": "aeafe9f1-d2d3-4450-8fc7-9b1c58abb107",
+      "name": "OpenWeatherMap",
+      "credentials": {
+        "openWeatherMapApi": {
+          "id": "fHDaUBPKuUDiiNmD",
+          "name": "OpenWeatherMap account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Respond to Webhook": {
+      "main": [
+        []
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Messenger": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet in Google Sheets": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenWeatherMap": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "90ec72f9-5187-4f73-bfa9-a4f4baebd2cf",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "8dc7a85f607f32a78e7a2ba1beef7de74eacaa7df2f2569a4d982badc6bbc4a3"
+  },
+  "id": "Czuia4arkDObmx4e",
+  "tags": []
+}
